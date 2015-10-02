@@ -1,10 +1,19 @@
 <?php
+/**
+ * @file
+ * Contain admin form functionality.
+ */
 namespace Drupal\stripe_api\Form;
 
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
+/**
+ * Class StripeApiAdminForm
+ *
+ * Contains admin form functionality for the Stripe API.
+ */
 class StripeApiAdminForm extends ConfigFormBase {
 
   /**
