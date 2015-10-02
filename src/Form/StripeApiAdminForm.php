@@ -48,22 +48,22 @@ class StripeApiAdminForm extends ConfigFormBase {
     $form['test_secret_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Stripe Secret Key (test)'),
-      '#default_value' => $config->get('test.secret_key'),
+      '#default_value' => $config->get('test_secret_key'),
     ];
     $form['test_public_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Stripe Public Key (test)'),
-      '#default_value' => $config->get('test.public_key'),
+      '#default_value' => $config->get('test_public_key'),
     ];
     $form['live_secret_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Stripe Secret Key (live)'),
-      '#default_value' => $config->get('live.secret_key'),
+      '#default_value' => $config->get('live_secret_key'),
     ];
     $form['live_public_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Stripe Public Key (live)'),
-      '#default_value' => $config->get('live.public_key'),
+      '#default_value' => $config->get('live_public_key'),
     ];
     $form['mode'] = [
       '#type' => 'radios',
@@ -72,7 +72,7 @@ class StripeApiAdminForm extends ConfigFormBase {
         'test' => $this->t('Test'),
         'live' => $this->t('Live'),
       ],
-      '#default_value' => $config->get('mode') ?: 'test',
+      '#default_value' => $config->get('mode'),
     ];
 
     $form['webhook_url'] = [
@@ -89,7 +89,7 @@ class StripeApiAdminForm extends ConfigFormBase {
     $form['log_webhooks'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Log incoming webhooks'),
-      '#default_value' => $config->get('log_webhooks') ?: TRUE,
+      '#default_value' => $config->get('log_webhooks'),
     ];
 
     if (_stripe_api_secret_key()) {
@@ -128,10 +128,10 @@ class StripeApiAdminForm extends ConfigFormBase {
     $this->config('stripe_api.settings')
       ->set('mode', $form_state->getValue('mode'))
       ->set('log_webhooks', $form_state->getValue('log_webhooks'))
-      ->set('test.secret_key', $form_state->getValue('test_secret_key'))
-      ->set('test.public_key', $form_state->getValue('test_public_key'))
-      ->set('live.secret_key', $form_state->getValue('live_secret_key'))
-      ->set('live.public_key', $form_state->getValue('live_public_key'))
+      ->set('test_secret_key', $form_state->getValue('test_secret_key'))
+      ->set('test_public_key', $form_state->getValue('test_public_key'))
+      ->set('live_secret_key', $form_state->getValue('live_secret_key'))
+      ->set('live_public_key', $form_state->getValue('live_public_key'))
       ->save();
     parent::submitForm($form, $form_state);
   }

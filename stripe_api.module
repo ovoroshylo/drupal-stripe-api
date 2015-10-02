@@ -57,7 +57,7 @@ function _stripe_api_secret_key($mode = '') {
   if (!$mode) {
     $mode = $config->get('mode');
   }
-  return $config->get($mode . '.secret_key');
+  return $config->get($mode . '_secret_key');
 }
 
 /**
@@ -74,7 +74,7 @@ function _stripe_api_public_key($mode = '') {
   if (!$mode) {
     $mode = $config->get('mode');
   }
-  return $config->get($mode . '.public_key');
+  return $config->get($mode . '_public_key');
 }
 
 /**
