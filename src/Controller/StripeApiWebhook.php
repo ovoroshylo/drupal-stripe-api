@@ -5,6 +5,7 @@
  */
 namespace Drupal\stripe_api\Controller;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\stripe_api\Event\StripeApiWebhookEvent;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,14 +24,14 @@ class StripeApiWebhook extends ControllerBase {
    * Captures the incoming webhook request.
    */
   public function handleIncomingWebhook() {
-    $input = file_get_contents("php://input");
-    $event_json = json_decode($input);
-    $event = NULL;
+    global $request;
+    $input = $request->getContent();
+    $event_json = (object) Json::decode($input);
 
     $config = $this->config('stripe_api.settings');
 
     // Validate the webhook.
-    if (!$this->isValidWebhook($config->get('mode') ?: 'test', $event_json)) {
+    if (!($event = $this->isValidWebhook($config->get('mode') ?: 'test', $event_json))) {
       // This webhook event is invalid.
       \Drupal::logger('stripe_api')
         ->error('Invalid webhook event: @data', [
@@ -56,23 +57,25 @@ class StripeApiWebhook extends ControllerBase {
    * @param object $event_json
    *   Stripe event object parsed from JSON.
    *
-   * @return bool
-   *   Returns TRUE if the webhook is valid.
+   * @return bool|\Stripe\Event
+   *   Returns TRUE if the webhook is valid or the Stripe Event object.
    */
   private function isValidWebhook($mode, $event_json = NULL) {
-    if (!$event_json || !is_object($event_json->data)) {
+    libraries_load('stripe');
+    $event = new \Stripe\Event();
+    if (!$event_json || !is_array($event_json->data)) {
       // Invalid data or couldn't parse.
-      return FALSE;
+      return NULL;
     }
     if ($mode === 'live' && ($event_json->livemode == TRUE || $event_json->id !== self::FAKE_EVENT_ID)) {
       // Check event if we're in live mode and this isn't a test event.
       $event = stripe_api_call('event', 'retrieve', $event_json->id);
       if (!$event) {
         // This webhook event is invalid.
-        return FALSE;
+        return NULL;
       }
     }
-    return TRUE;
+    return $event;
   }
 
 }
