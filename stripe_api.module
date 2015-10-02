@@ -4,87 +4,24 @@
  * Contains hook and methods for the Stripe API module.
  */
 
-//module_load_include('inc', 'stripe_api', 'stripe_api.methods');
-
-/**
- * Implements hook_menu().
- */
-//function stripe_api_menu() {
-//  $items['admin/config/services/stripe_api'] = array(
-//    'type' => MENU_NORMAL_ITEM,
-//    'title' => 'Stripe API Settings',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => array('stripe_api_admin_settings_form'),
-//    'file' => 'stripe_api.admin.inc',
-//    'access arguments' => array('edit stripe api settings'),
-//    'description' => 'Edit Stripe API credentials.',
-//  );
-//  $items['stripe/webhook'] = array(
-//    'type' => MENU_CALLBACK,
-//    'access callback' => TRUE,
-//    'page callback' => '_stripe_api_process_incoming_webhook',
-//  );
-//  return $items;
-//}
-
-/**
- * Processes incoming Stripe webhooks.
- */
-function _stripe_api_process_incoming_webhook() {
-  $input = file_get_contents("php://input");
-  $event_json = json_decode($input);
-  $event = NULL;
-
-  // Validate the webhook if we are in LIVE mode.
-  if (variable_get('stripe_api_mode', 'test') === 'live' && ($event_json->livemode == TRUE || $event_json->id !== 'evt_00000000000000')) {
-    $event = stripe_api_call('event', 'retrieve', $event_json->id);
-    if (!$event) {
-      watchdog('stripe_api', 'Invalid webhook event: @data', array(
-        '@data' => $input,
-      ), WATCHDOG_ERROR);
-      // This webhook event is invalid.
-      drupal_add_http_header('Status', '403 Forbidden');
-      print 'Forbidden';
-      exit;
-    }
-  }
-
-  // Invoke webhooks for others to use.
-  module_invoke_all('stripe_api_webhook', $event_json->type, $event_json->data, $event);
-  module_invoke_all('stripe_api_webhook_' . str_replace('.', '_', $event_json->type), $event_json->data, $event);
-  print 'okay';
-}
-
-/**
- * Implements hook_stripe_api_webhook().
- *
- * Log incoming webhooks.
- */
-function stripe_api_stripe_api_webhook($type, $data, Stripe\Event $event = NULL) {
-  if (variable_get('stripe_api_log_webhooks', TRUE)) {
-    watchdog('stripe_api', 'Processed webhook: @name<br /><br />Data: @data', array(
-      '@name' => $type,
-      '@data' => json_encode($data),
-    ), WATCHDOG_INFO);
-  }
-}
+use Drupal\Component\Serialization\Json;
 
 /**
  * Implements hook_libraries_info().
  */
 function stripe_api_libraries_info() {
-  $libraries['stripe'] = array(
+  $libraries['stripe'] = [
     'name' => 'Stripe Payment API PHP Library',
     'vendor url' => 'https://github.com/stripe/stripe-php',
     'download url' => 'https://github.com/stripe/stripe-php/archive/master.zip',
-    'version arguments' => array(
+    'version arguments' => [
       'file' => 'VERSION',
       'pattern' => '/([0-9a-zA-Z\.-]+)/',
       'lines' => 1,
-    ),
-    'files' => array('php' => array('init.php')),
-    'callbacks' => array('post-load' => array('stripe_api_libraries_postload_callback')),
-  );
+    ],
+    'files' => ['php' => ['init.php']],
+    'callbacks' => ['post-load' => ['stripe_api_libraries_postload_callback']],
+  ];
   return $libraries;
 }
 
@@ -133,10 +70,11 @@ function _stripe_api_secret_key($mode = '') {
  *   Returns the public key.
  */
 function _stripe_api_public_key($mode = '') {
+  $config = \Drupal::config('stripe_api.settings');
   if (!$mode) {
-    $mode = variable_get('stripe_api_mode');
+    $mode = $config->get('mode');
   }
-  return variable_get('stripe_api_' . $mode . '_public_key');
+  return $config->get($mode . '.public_key');
 }
 
 /**
@@ -160,19 +98,19 @@ function _stripe_api_public_key($mode = '') {
 function stripe_api_call($obj, $method = NULL, $params = NULL) {
   libraries_load('stripe');
   $obj = ucfirst($obj);
-  $class = 'Stripe\\' . $obj;
+  $class = '\\Stripe\\' . $obj;
   if ($method) {
     try {
-      return call_user_func(array($class, $method), $params);
+      return call_user_func([$class, $method], $params);
     } catch (Exception $e) {
-      watchdog('stripe_api', 'Error: @error <br /> @args', array(
-        '@args' => json_encode(array(
+      \Drupal::logger('stripe_api')->error('Error: @error <br /> @args', [
+        '@args' => Json::encode([
           'object' => $obj,
           'method' => $method,
           'params' => $params,
-        )),
+        ]),
         '@error' => $e->getMessage(),
-      ), WATCHDOG_ERROR);
+      ]);
       return NULL;
     }
   }

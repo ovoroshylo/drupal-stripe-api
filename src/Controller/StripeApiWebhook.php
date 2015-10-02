@@ -3,8 +3,12 @@
 namespace Drupal\stripe_api\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\stripe_api\Event\StripeApiWebhookEvent;
+use Symfony\Component\HttpFoundation\Response;
 
 class StripeApiWebhook extends ControllerBase {
+
+  const FAKE_EVENT_ID = 'evt_00000000000000';
 
   /**
    * Captures the incoming webhook request.
@@ -14,24 +18,27 @@ class StripeApiWebhook extends ControllerBase {
     $event_json = json_decode($input);
     $event = NULL;
 
+    $config = $this->config('stripe_api.settings');
+
     // Validate the webhook if we are in LIVE mode.
-    if (variable_get('stripe_api_mode', 'test') === 'live' && ($event_json->livemode == TRUE || $event_json->id !== 'evt_00000000000000')) {
+    if (($config->get('mode') ?: 'test') === 'live' && ($event_json->livemode == TRUE || $event_json->id !== self::FAKE_EVENT_ID)) {
       $event = stripe_api_call('event', 'retrieve', $event_json->id);
       if (!$event) {
-        watchdog('stripe_api', 'Invalid webhook event: @data', array(
-          '@data' => $input,
-        ), WATCHDOG_ERROR);
+        \Drupal::logger('stripe_api')
+          ->error('Invalid webhook event: @data', [
+            '@data' => $input,
+          ]);
         // This webhook event is invalid.
-        drupal_add_http_header('Status', '403 Forbidden');
-        print 'Forbidden';
-        exit;
+        return new Response('Forbidden', Response::HTTP_FORBIDDEN);
       }
     }
 
-    // Invoke webhooks for others to use.
-    module_invoke_all('stripe_api_webhook', $event_json->type, $event_json->data, $event);
-    module_invoke_all('stripe_api_webhook_' . str_replace('.', '_', $event_json->type), $event_json->data, $event);
-    print 'okay';
+    // Dispatch the webhook event.
+    $dispatcher = \Drupal::service('event_dispatcher');
+    $e = new StripeApiWebhookEvent($event_json->type, $event_json->data, $event);
+    $dispatcher->dispatch('stripe_api.webhook', $e);
+
+    return new Response('okay', Response::HTTP_OK);
   }
 
 }

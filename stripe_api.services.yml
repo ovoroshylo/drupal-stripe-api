@@ -1,0 +1,5 @@
+services:
+  stripe_api.webhook_subscriber:
+    class: Drupal\stripe_api\Event\StripeApiWebhookSubscriber
+    tags:
+      - {name: event_subscriber}

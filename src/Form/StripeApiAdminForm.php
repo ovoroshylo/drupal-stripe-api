@@ -88,7 +88,7 @@ class StripeApiAdminForm extends ConfigFormBase {
         '#type' => 'button',
         '#value' => $this->t('Test Stripe Connection'),
         '#ajax' => [
-          'callback' => array($this, 'testStripeConnection'),
+          'callback' => [$this, 'testStripeConnection'],
           'wrapper' => 'stripe-connect-results',
           'method' => 'append',
         ],
@@ -105,19 +105,11 @@ class StripeApiAdminForm extends ConfigFormBase {
   function testStripeConnection(array &$form, FormStateInterface $form_state) {
     $account = stripe_api_call('account', 'retrieve');
     if ($account && $account->email) {
-      return ['#markup' => 'Success! Account email: ' . $account->email];
+      return ['#markup' => $this->t('Success! Account email: %email', ['%email' => $account->email])];
     }
     else {
-      return ['#markup' => 'Error! Could not connect!'];
+      return ['#markup' => $this->t('Error! Could not connect!')];
     }
-  }
-
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-
   }
 
   /**
@@ -126,6 +118,7 @@ class StripeApiAdminForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('stripe_api.settings')
       ->set('mode', $form_state->getValue('mode'))
+      ->set('log_webhooks', $form_state->getValue('log_webhooks'))
       ->set('test.secret_key', $form_state->getValue('test_secret_key'))
       ->set('test.public_key', $form_state->getValue('test_public_key'))
       ->set('live.secret_key', $form_state->getValue('live_secret_key'))
