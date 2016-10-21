@@ -5,9 +5,12 @@ stripe_api.admin:
     _title: 'Stripe API Settings'
   requirements:
     _permission: 'administer stripe api'
+  options:
+    _admin_route: TRUE
 
 stripe_api.webhook:
   path: '/stripe/webhook'
+  methods:  [POST]
   defaults:
     _controller: '\Drupal\stripe_api\Controller\StripeApiWebhook::handleIncomingWebhook'
   requirements:

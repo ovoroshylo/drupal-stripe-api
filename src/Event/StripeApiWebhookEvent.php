@@ -14,7 +14,12 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class StripeApiWebhookEvent extends Event {
 
-  public $type, $data, $event;
+  /** @var string  */
+  public $type;
+  /** @var array */
+  public $data;
+   /** @var \Stripe\Event  */
+  public $event;
 
   /**
    * Sets the default values for the event.

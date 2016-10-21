@@ -38,11 +38,12 @@ class StripeApiAdminForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('stripe_api.settings');
 
+    // @see https://www.drupal.org/docs/7/api/localization-api/dynamic-or-static-links-and-html-in-translatable-strings
     $form['link'] = [
-      '#markup' => $this->t('!dashboard | !api_keys | !docs<br /><br />', [
-        '!dashboard' => \Drupal::l($this->t('Dashboard'), Url::fromUri('https://dashboard.stripe.com', ['attributes' => ['target' => '_blank']])),
-        '!api_keys' => \Drupal::l($this->t('API Keys'), Url::fromUri('https://dashboard.stripe.com/account/apikeys', ['attributes' => ['target' => '_blank']])),
-        '!docs' => \Drupal::l($this->t('Docs'), Url::fromUri('https://stripe.com/docs/api', ['attributes' => ['target' => '_blank']])),
+      '#markup' => $this->t('Stripe links: <a href="@stripe-dashboard" target="_blank">Dashboard</a> | <a href="@stripe-keys" target="_blank">API Keys</a> | <a href="@stripe-docs" target="_blank">Docs</a><br /><br />', [
+        '@stripe-dashboard' =>  Url::fromUri('https://dashboard.stripe.com', ['attributes' => ['target' => '_blank']])->toString(),
+        '@stripe-keys' =>  Url::fromUri('https://dashboard.stripe.com/account/apikeys', ['attributes' => ['target' => '_blank']])->toString(),
+        '@stripe-docs' =>  Url::fromUri('https://stripe.com/docs/api', ['attributes' => ['target' => '_blank']])->toString(),
       ]),
     ];
     $form['test_secret_key'] = [
@@ -81,8 +82,8 @@ class StripeApiAdminForm extends ConfigFormBase {
       '#title' => $this->t('Webhook URL'),
       '#default_value' => Url::fromRoute('stripe_api.webhook', [], ['absolute' => TRUE])
         ->toString(),
-      '#description' => $this->t('Add this webhook path in the !link', [
-        '!link' => \Drupal::l($this->t('Stripe Dashboard'), Url::fromUri('https://dashboard.stripe.com/account/webhooks', ['attributes' => ['target' => '_blank']])),
+      '#description' => $this->t('Add this webhook path in the <a href="@stripe-dashboard">Stripe Daskboard</a>', [
+        '@stripe-dashboard' => Url::fromUri('https://dashboard.stripe.com/account/webhooks', ['attributes' => ['target' => '_blank']])->toString(),
       ]),
     ];
 

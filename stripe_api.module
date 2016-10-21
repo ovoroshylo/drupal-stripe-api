@@ -7,43 +7,6 @@
 use Drupal\Component\Serialization\Json;
 
 /**
- * Implements hook_libraries_info().
- */
-function stripe_api_libraries_info() {
-  $libraries['stripe'] = [
-    'name' => 'Stripe Payment API PHP Library',
-    'vendor url' => 'https://github.com/stripe/stripe-php',
-    'download url' => 'https://github.com/stripe/stripe-php/archive/master.zip',
-    'version arguments' => [
-      'file' => 'VERSION',
-      'pattern' => '/([0-9a-zA-Z\.-]+)/',
-      'lines' => 1,
-    ],
-    'files' => ['php' => ['init.php']],
-    'callbacks' => ['post-load' => ['stripe_api_libraries_postload_callback']],
-  ];
-  return $libraries;
-}
-
-/**
- * Post-load callback for the Stripe PHP Library.
- *
- * @param array $library
- *   An array of library information.
- * @param string $version
- *   If the $library array belongs to a certain version, a string containing the
- *   version.
- * @param string $variant
- *   If the $library array belongs to a certain variant, a string containing the
- *   variant name.
- */
-function stripe_api_libraries_postload_callback($library, $version = NULL, $variant = NULL) {
-  if (!empty($library['loaded'])) {
-    \Stripe\Stripe::setApiKey(_stripe_api_secret_key());
-  }
-}
-
-/**
  * Returns the Stripe API secret key.
  *
  * @param string $mode

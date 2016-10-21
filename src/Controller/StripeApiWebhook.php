@@ -8,6 +8,7 @@ namespace Drupal\stripe_api\Controller;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\stripe_api\Event\StripeApiWebhookEvent;
+use Stripe\Event;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -23,31 +24,41 @@ class StripeApiWebhook extends ControllerBase {
   /**
    * Captures the incoming webhook request.
    */
-  public function handleIncomingWebhook() {
-    global $request;
-    $input = $request->getContent();
-    $event_json = (object) Json::decode($input);
+  public function handleIncomingWebhook( Request $request ) {
 
-    $config = $this->config('stripe_api.settings');
+      if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
 
-    // Validate the webhook.
-    if (!($event = $this->isValidWebhook($config->get('mode') ?: 'test', $event_json))) {
-      // This webhook event is invalid.
-      \Drupal::logger('stripe_api')
-        ->error('Invalid webhook event: @data', [
-          '@data' => $input,
-        ]);
-      return new Response('Forbidden', Response::HTTP_FORBIDDEN);
-    }
+          $input = $request->getContent();
+          $decoded_input = json_decode( $input, TRUE );
+          $config = $this->config('stripe_api.settings');
+          $mode = $config->get('mode') ?: 'test';
 
-    // Dispatch the webhook event.
-    $dispatcher = \Drupal::service('event_dispatcher');
-    $e = new StripeApiWebhookEvent($event_json->type, $event_json->data, $event);
-    $dispatcher->dispatch('stripe_api.webhook', $e);
+          if (!$event = $this->isValidWebhook($mode, $decoded_input)) {
+              $this->getLogger('stripe_api')
+                ->error('Invalid webhook event: @data', [
+                  '@data' => $input,
+                ]);
+              return new Response(NULL, Response::HTTP_FORBIDDEN);
+          }
 
-    // Everything is okay.
-    return new Response('Okay', Response::HTTP_OK);
+          /** @var LoggerChannelInterface $logger */
+          $logger = $this->getLogger('stripe_api');
+          $logger->info("Stripe webhook received event:\n @event", ['@event' => (string) $event]);
+
+          // Dispatch the webhook event.
+          $dispatcher = \Drupal::service('event_dispatcher');
+          $e = new StripeApiWebhookEvent($event->type, $decoded_input->data, $event);
+          $dispatcher->dispatch('stripe_api.webhook', $e);
+
+          return new Response('Okay', Response::HTTP_OK);
+
+      }
+
+      return new Response(NULL, Response::HTTP_FORBIDDEN);
   }
+
+
+
 
   /**
    * Determines if a webhook is valid.
@@ -60,22 +71,16 @@ class StripeApiWebhook extends ControllerBase {
    * @return bool|\Stripe\Event
    *   Returns TRUE if the webhook is valid or the Stripe Event object.
    */
-  private function isValidWebhook($mode, $event_json = NULL) {
-    libraries_load('stripe');
-    $event = new \Stripe\Event();
-    if (!$event_json || !is_array($event_json->data)) {
-      // Invalid data or couldn't parse.
-      return NULL;
-    }
-    if ($mode === 'live' && ($event_json->livemode == TRUE || $event_json->id !== self::FAKE_EVENT_ID)) {
-      // Check event if we're in live mode and this isn't a test event.
-      $event = stripe_api_call('event', 'retrieve', $event_json->id);
-      if (!$event) {
-        // This webhook event is invalid.
-        return NULL;
+  private function isValidWebhook($mode, $data) {
+      if (!empty($data->id)
+        && $mode === 'live'
+        && ($data->livemode == TRUE || $data->id !== self::FAKE_EVENT_ID)) {
+
+          // Verify the event by fetching it from Stripe.
+          return Event::retrieve($data->id);
       }
-    }
-    return $event;
+
+      return FALSE;
   }
 
 }
