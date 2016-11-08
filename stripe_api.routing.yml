@@ -10,7 +10,7 @@ stripe_api.admin:
 
 stripe_api.webhook:
   path: '/stripe/webhook'
-  methods:  [POST]
+  methods: [POST]
   defaults:
     _controller: '\Drupal\stripe_api\Controller\StripeApiWebhook::handleIncomingWebhook'
   requirements:

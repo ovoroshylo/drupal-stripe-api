@@ -5,9 +5,12 @@
  */
 namespace Drupal\stripe_api\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\stripe_api\StripeApiService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class StripeApiAdminForm
@@ -15,6 +18,32 @@ use Drupal\Core\Form\FormStateInterface;
  * Contains admin form functionality for the Stripe API.
  */
 class StripeApiAdminForm extends ConfigFormBase {
+
+    /** @var \Drupal\stripe_api\StripeApiService */
+    protected $stripeApi;
+
+    /**
+     * Constructs a \Drupal\system\ConfigFormBase object.
+     *
+     * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+     *   The factory for configuration objects.
+     * @param \Drupal\stripe_api\StripeApiService $stripe_api
+     */
+    public function __construct(ConfigFactoryInterface $config_factory, StripeApiService $stripe_api) {
+        $this->stripeApi = $stripe_api;
+
+        parent::__construct($config_factory);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function create(ContainerInterface $container) {
+        return new static(
+          $container->get('config.factory'),
+          $container->get('stripe_api.stripe_api')
+        );
+    }
 
   /**
    * {@inheritdoc}
@@ -93,7 +122,7 @@ class StripeApiAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('log_webhooks'),
     ];
 
-    if (_stripe_api_secret_key()) {
+    if ($this->stripeApi->getApiKey()) {
       $form['stripe_test'] = [
         '#type' => 'button',
         '#value' => $this->t('Test Stripe Connection'),
@@ -113,7 +142,7 @@ class StripeApiAdminForm extends ConfigFormBase {
    * AJAX callback to test the Stripe connection.
    */
   function testStripeConnection(array &$form, FormStateInterface $form_state) {
-    $account = stripe_api_call('account', 'retrieve');
+    $account = $this->stripeApi->call('account', 'retrieve');
     if ($account && $account->email) {
       return ['#markup' => $this->t('Success! Account email: %email', ['%email' => $account->email])];
     }

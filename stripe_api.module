@@ -7,40 +7,6 @@
 use Drupal\Component\Serialization\Json;
 
 /**
- * Returns the Stripe API secret key.
- *
- * @param string $mode
- *   Stripe mode, either 'live' or 'test'. Leave blank to use the active mode.
- *
- * @return string
- *   Returns the secret key.
- */
-function _stripe_api_secret_key($mode = '') {
-  $config = \Drupal::config('stripe_api.settings');
-  if (!$mode) {
-    $mode = $config->get('mode');
-  }
-  return $config->get($mode . '_secret_key');
-}
-
-/**
- * Returns the Stripe API public key.
- *
- * @param string $mode
- *   Stripe mode, either 'live' or 'test'. Leave blank to use the active mode.
- *
- * @return string
- *   Returns the public key.
- */
-function _stripe_api_public_key($mode = '') {
-  $config = \Drupal::config('stripe_api.settings');
-  if (!$mode) {
-    $mode = $config->get('mode');
-  }
-  return $config->get($mode . '_public_key');
-}
-
-/**
  * Makes a call to the Stripe API.
  *
  * @param string $obj
@@ -59,7 +25,6 @@ function _stripe_api_public_key($mode = '') {
  *   Returns the ApiResource or NULL on error.
  */
 function stripe_api_call($obj, $method = NULL, $params = NULL) {
-  libraries_load('stripe');
   $obj = ucfirst($obj);
   $class = '\\Stripe\\' . $obj;
   if ($method) {
