@@ -1,8 +1,5 @@
 <?php
-/**
- * @file
- * Contain admin form functionality.
- */
+
 namespace Drupal\stripe_api\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -13,37 +10,38 @@ use Drupal\stripe_api\StripeApiService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class StripeApiAdminForm
+ * Class StripeApiAdminForm.
  *
  * Contains admin form functionality for the Stripe API.
  */
 class StripeApiAdminForm extends ConfigFormBase {
 
-    /** @var \Drupal\stripe_api\StripeApiService */
-    protected $stripeApi;
+  /**
+   * @var \Drupal\stripe_api\StripeApiService*/
+  protected $stripeApi;
 
-    /**
-     * Constructs a \Drupal\system\ConfigFormBase object.
-     *
-     * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-     *   The factory for configuration objects.
-     * @param \Drupal\stripe_api\StripeApiService $stripe_api
-     */
-    public function __construct(ConfigFactoryInterface $config_factory, StripeApiService $stripe_api) {
-        $this->stripeApi = $stripe_api;
+  /**
+   * Constructs a \Drupal\system\ConfigFormBase object.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The factory for configuration objects.
+   * @param \Drupal\stripe_api\StripeApiService $stripe_api
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, StripeApiService $stripe_api) {
+    $this->stripeApi = $stripe_api;
 
-        parent::__construct($config_factory);
-    }
+    parent::__construct($config_factory);
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function create(ContainerInterface $container) {
-        return new static(
-          $container->get('config.factory'),
-          $container->get('stripe_api.stripe_api')
-        );
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('stripe_api.stripe_api')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -70,9 +68,9 @@ class StripeApiAdminForm extends ConfigFormBase {
     // @see https://www.drupal.org/docs/7/api/localization-api/dynamic-or-static-links-and-html-in-translatable-strings
     $form['link'] = [
       '#markup' => $this->t('Stripe links: <a href="@stripe-dashboard" target="_blank">Dashboard</a> | <a href="@stripe-keys" target="_blank">API Keys</a> | <a href="@stripe-docs" target="_blank">Docs</a><br /><br />', [
-        '@stripe-dashboard' =>  Url::fromUri('https://dashboard.stripe.com', ['attributes' => ['target' => '_blank']])->toString(),
-        '@stripe-keys' =>  Url::fromUri('https://dashboard.stripe.com/account/apikeys', ['attributes' => ['target' => '_blank']])->toString(),
-        '@stripe-docs' =>  Url::fromUri('https://stripe.com/docs/api', ['attributes' => ['target' => '_blank']])->toString(),
+        '@stripe-dashboard' => Url::fromUri('https://dashboard.stripe.com', ['attributes' => ['target' => '_blank']])->toString(),
+        '@stripe-keys' => Url::fromUri('https://dashboard.stripe.com/account/apikeys', ['attributes' => ['target' => '_blank']])->toString(),
+        '@stripe-docs' => Url::fromUri('https://stripe.com/docs/api', ['attributes' => ['target' => '_blank']])->toString(),
       ]),
     ];
     $form['test_secret_key'] = [
@@ -141,7 +139,7 @@ class StripeApiAdminForm extends ConfigFormBase {
   /**
    * AJAX callback to test the Stripe connection.
    */
-  function testStripeConnection(array &$form, FormStateInterface $form_state) {
+  public function testStripeConnection(array &$form, FormStateInterface $form_state) {
     $account = $this->stripeApi->call('account', 'retrieve');
     if ($account && $account->email) {
       return ['#markup' => $this->t('Success! Account email: %email', ['%email' => $account->email])];

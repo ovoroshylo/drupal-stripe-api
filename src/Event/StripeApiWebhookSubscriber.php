@@ -1,15 +1,12 @@
 <?php
-/**
- * @file
- * Contains webhook subscriber functionality.
- */
+
 namespace Drupal\stripe_api\Event;
 
 use Drupal\Component\Serialization\Json;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Class StripeApiWebhookSubscriber
+ * Class StripeApiWebhookSubscriber.
  *
  * Provides the webhook subscriber functionality.
  */
@@ -18,7 +15,7 @@ class StripeApiWebhookSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  static function getSubscribedEvents() {
+  static public function getSubscribedEvents() {
     $events['stripe_api.webhook'][] = ['onIncomingWebhook'];
     return $events;
   }
