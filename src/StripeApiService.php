@@ -106,7 +106,7 @@ class StripeApiService {
       try {
         return call_user_func([$class, $method], $params);
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         \Drupal::logger('stripe_api')->error('Error: @error <br /> @args', [
           '@args' => Json::encode([
             'object' => $obj,
