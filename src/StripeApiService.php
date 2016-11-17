@@ -65,7 +65,9 @@ class StripeApiService {
   public function getApiKey() {
     $config_key = $this->getMode() . '_secret_key';
     $key_id = $this->config->get($config_key);
-    $api_key = $this->key->getKey($key_id)->getKeyValue();
+    if ($key_id) {
+      $api_key = $this->key->getKey($key_id)->getKeyValue();
+    }
 
     return $api_key;
   }
@@ -76,7 +78,9 @@ class StripeApiService {
   public function getPubKey() {
     $config_key = $this->getMode() . '_public_key';
     $key_id = $this->config->get($config_key);
-    $pub_key = $this->key->getKey($key_id)->getKeyValue();
+    if ($key_id) {
+      $pub_key = $this->key->getKey($key_id)->getKeyValue();
+    }
 
     return $pub_key;
   }
