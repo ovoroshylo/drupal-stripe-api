@@ -74,22 +74,22 @@ class StripeApiAdminForm extends ConfigFormBase {
       ]),
     ];
     $form['test_secret_key'] = [
-      '#type' => 'textfield',
+      '#type' => 'key_select',
       '#title' => $this->t('Stripe Secret Key (test)'),
       '#default_value' => $config->get('test_secret_key'),
     ];
     $form['test_public_key'] = [
-      '#type' => 'textfield',
+      '#type' => 'key_select',
       '#title' => $this->t('Stripe Public Key (test)'),
       '#default_value' => $config->get('test_public_key'),
     ];
     $form['live_secret_key'] = [
-      '#type' => 'textfield',
+      '#type' => 'key_select',
       '#title' => $this->t('Stripe Secret Key (live)'),
       '#default_value' => $config->get('live_secret_key'),
     ];
     $form['live_public_key'] = [
-      '#type' => 'textfield',
+      '#type' => 'key_select',
       '#title' => $this->t('Stripe Public Key (live)'),
       '#default_value' => $config->get('live_public_key'),
     ];
@@ -140,12 +140,17 @@ class StripeApiAdminForm extends ConfigFormBase {
    * AJAX callback to test the Stripe connection.
    */
   public function testStripeConnection(array &$form, FormStateInterface $form_state) {
-    $account = $this->stripeApi->call('account', 'retrieve');
+    try {
+      $account = $this->stripeApi->call('account', 'retrieve');
+    }
+    catch (\Exception $e) {
+      $account = NULL;
+    }
     if ($account && $account->email) {
       return ['#markup' => $this->t('Success! Account email: %email', ['%email' => $account->email])];
     }
     else {
-      return ['#markup' => $this->t('Error! Could not connect!')];
+      return ['#markup' => $this->t('Error! Could not connect! See error log.')];
     }
   }
 

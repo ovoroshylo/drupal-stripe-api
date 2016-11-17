@@ -6,6 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\key\KeyRepositoryInterface;
 use Stripe\Stripe;
 
 /**
@@ -31,13 +32,17 @@ class StripeApiService {
    * @var \Drupal\Core\Logger\LoggerChannelInterface*/
   protected $logger;
 
+  /** @var \Drupal\key\KeyRepositoryInterface */
+  protected $key;
+
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerChannelInterface $logger) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerChannelInterface $logger, KeyRepositoryInterface $key) {
     $this->config = $config_factory->get('stripe_api.settings');
     $this->entityTypeManager = $entity_type_manager;
     $this->logger = $logger;
+    $this->key = $key;
     Stripe::setApiKey($this->getApiKey());
   }
 
@@ -59,7 +64,8 @@ class StripeApiService {
    */
   public function getApiKey() {
     $config_key = $this->getMode() . '_secret_key';
-    $api_key = $this->config->get($config_key);
+    $key_id = $this->config->get($config_key);
+    $api_key = $this->key->getKey($key_id)->getKeyValue();
 
     return $api_key;
   }
@@ -69,7 +75,8 @@ class StripeApiService {
    */
   public function getPubKey() {
     $config_key = $this->getMode() . '_public_key';
-    $pub_key = $this->config->get($config_key);;
+    $key_id = $this->config->get($config_key);
+    $pub_key = $this->key->getKey($key_id)->getKeyValue();
 
     return $pub_key;
   }
