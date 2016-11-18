@@ -66,10 +66,14 @@ class StripeApiService {
     $config_key = $this->getMode() . '_secret_key';
     $key_id = $this->config->get($config_key);
     if ($key_id) {
-      $api_key = $this->key->getKey($key_id)->getKeyValue();
+      $key_entity = $this->key->getKey($key_id);
+      if ($key_entity) {
+        return $key_entity->getKeyValue();
+      }
+
     }
 
-    return $api_key;
+    return NULL;
   }
 
   /**
@@ -79,10 +83,13 @@ class StripeApiService {
     $config_key = $this->getMode() . '_public_key';
     $key_id = $this->config->get($config_key);
     if ($key_id) {
-      $pub_key = $this->key->getKey($key_id)->getKeyValue();
+      $key_entity = $this->key->getKey($key_id);
+      if ($key_entity) {
+        return $key_entity->getKeyValue();
+      }
     }
 
-    return $pub_key;
+    return NULL;
   }
 
   /**
