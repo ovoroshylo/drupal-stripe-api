@@ -11,6 +11,7 @@
     "source": "http://cgit.drupalcode.org/stripe_api"
   },
   "require": {
-    "stripe/stripe-php": "^3"
+    "stripe/stripe-php": "^3",
+    "drupal/key": "^1.3"
   }
 }
