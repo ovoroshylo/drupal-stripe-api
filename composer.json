@@ -13,5 +13,10 @@
   "require": {
     "stripe/stripe-php": "^3",
     "drupal/key": "^1.3"
+  },
+  "extra": {
+      "branch-alias": {
+          "dev-master": "1.x-dev"
+      }
   }
 }
