@@ -109,7 +109,7 @@ class StripeApiAdminForm extends ConfigFormBase {
       '#title' => $this->t('Webhook URL'),
       '#default_value' => Url::fromRoute('stripe_api.webhook', [], ['absolute' => TRUE])
         ->toString(),
-      '#description' => $this->t('Add this webhook path in the <a href="@stripe-dashboard">Stripe Daskboard</a>', [
+      '#description' => $this->t('Add this webhook path in the <a href="@stripe-dashboard">Stripe Dashboard</a>', [
         '@stripe-dashboard' => Url::fromUri('https://dashboard.stripe.com/account/webhooks', ['attributes' => ['target' => '_blank']])->toString(),
       ]),
     ];
