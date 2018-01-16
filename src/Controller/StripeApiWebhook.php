@@ -48,36 +48,29 @@ class StripeApiWebhook extends ControllerBase {
    * @return Response
    */
   public function handleIncomingWebhook(Request $request) {
+    $input = $request->getContent();
+    $decoded_input = json_decode($input);
+    $config = $this->config('stripe_api.settings');
+    $mode = $config->get('mode') ?: 'test';
 
-    if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
-
-      $input = $request->getContent();
-      $decoded_input = json_decode($input);
-      $config = $this->config('stripe_api.settings');
-      $mode = $config->get('mode') ?: 'test';
-
-      if (!$event = $this->isValidWebhook($mode, $decoded_input)) {
-        $this->getLogger('stripe_api')
-          ->error('Invalid webhook event: @data', [
-            '@data' => $input,
-          ]);
-        return new Response(NULL, Response::HTTP_FORBIDDEN);
-      }
-
-      /** @var LoggerChannelInterface $logger */
-      $logger = $this->getLogger('stripe_api');
-      $logger->info("Stripe webhook received event:\n @event", ['@event' => (string) $event]);
-
-      // Dispatch the webhook event.
-      $dispatcher = \Drupal::service('event_dispatcher');
-      $e = new StripeApiWebhookEvent($event->type, $decoded_input->data, $event);
-      $dispatcher->dispatch('stripe_api.webhook', $e);
-
-      return new Response('Okay', Response::HTTP_OK);
-
+    if (!$event = $this->isValidWebhook($mode, $decoded_input)) {
+      $this->getLogger('stripe_api')
+        ->error('Invalid webhook event: @data', [
+          '@data' => $input,
+        ]);
+      return new Response(NULL, Response::HTTP_FORBIDDEN);
     }
 
-    return new Response(NULL, Response::HTTP_FORBIDDEN);
+    /** @var LoggerChannelInterface $logger */
+    $logger = $this->getLogger('stripe_api');
+    $logger->info("Stripe webhook received event:\n @event", ['@event' => (string) $event]);
+
+    // Dispatch the webhook event.
+    $dispatcher = \Drupal::service('event_dispatcher');
+    $e = new StripeApiWebhookEvent($event->type, $decoded_input->data, $event);
+    $dispatcher->dispatch('stripe_api.webhook', $e);
+
+    return new Response('Okay', Response::HTTP_OK);
   }
 
   /**
