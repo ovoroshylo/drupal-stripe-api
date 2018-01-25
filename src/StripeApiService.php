@@ -95,34 +95,37 @@ class StripeApiService {
   /**
    * Makes a call to the Stripe API.
    *
-   * @param string $obj
-   *   Stripe object. Can be a Charge, Refund, Customer, Subscription, Card, Plan,
-   *   Coupon, Discount, Invoice, InvoiceItem, Dispute, Transfer, TransferReversal,
-   *   Recipient, BankAccount, ApplicationFee, FeeRefund, Account, Balance, Event,
-   *   Token, BitcoinReceiver, FileUpload.
-   *
+   * @param string $object
+   *   Stripe object. Can be a Charge, Refund, Customer, Subscription, Card,
+   *   Plan, Coupon, Discount, Invoice, InvoiceItem, Dispute, Transfer,
+   *   TransferReversal, Recipient, BankAccount, ApplicationFee, FeeRefund,
+   *   Account, Balance, Event, Token, BitcoinReceiver, FileUpload.
    * @param string $method
-   *   Stripe object method. Common operations include retrieve, all, create,.
-   *
-   * @param mixed $params
+   *   Stripe object method. Common operations include retrieve, all, create.
+   * @param ...
    *   Additional params to pass to the method. Can be an array, string.
    *
-   * @return Stripe\ApiResource
-   *   Returns the ApiResource or NULL on error.
+   * @return \Stripe\ApiResource|string|null
+   *   Returns the ApiResource or NULL on error or string which contains called
+   *   class if method not exist.
    */
-  public function call($obj, $method = NULL, $params = NULL) {
-    $obj = ucfirst($obj);
-    $class = '\\Stripe\\' . $obj;
+  public function call($object, $method) {
+    $object = ucfirst($object);
+    $class = '\\Stripe\\' . $object;
+    $args = func_get_args();
+
+    // Remove $object and $method from the arguments.
+    unset($args[0], $args[1]);
     if ($method) {
       try {
-        return call_user_func([$class, $method], $params);
+        return call_user_func_array([$class, $method], $args);
       }
-      catch (\Exception $e) {
-        \Drupal::logger('stripe_api')->error('Error: @error <br /> @args', [
+      catch (\Throwable $e) {
+        $this->logger->error('Error: @error <br /> @args', [
           '@args' => Json::encode([
-            'object' => $obj,
+            'object' => $object,
             'method' => $method,
-            'params' => $params,
+            'args' => $args,
           ]),
           '@error' => $e->getMessage(),
         ]);
