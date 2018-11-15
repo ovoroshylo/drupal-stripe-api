@@ -5,4 +5,4 @@ type: module
 package: Stripe
 configure: stripe_api.admin
 dependencies:
-  - key
+  - key:key
