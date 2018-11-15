@@ -5,8 +5,8 @@ namespace Drupal\stripe_api;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\key\KeyRepositoryInterface;
+use Psr\Log\LoggerInterface;
 use Stripe\Stripe;
 
 /**
@@ -29,7 +29,10 @@ class StripeApiService {
   protected $entityTypeManager;
 
   /**
-   * @var \Drupal\Core\Logger\LoggerChannelInterface*/
+   * Logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
   protected $logger;
 
   /** @var \Drupal\key\KeyRepositoryInterface */
@@ -38,7 +41,7 @@ class StripeApiService {
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerChannelInterface $logger, KeyRepositoryInterface $key) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger, KeyRepositoryInterface $key) {
     $this->config = $config_factory->get('stripe_api.settings');
     $this->entityTypeManager = $entity_type_manager;
     $this->logger = $logger;
