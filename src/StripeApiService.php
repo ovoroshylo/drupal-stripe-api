@@ -47,6 +47,7 @@ class StripeApiService {
     $this->logger = $logger;
     $this->key = $key;
     Stripe::setApiKey($this->getApiKey());
+    $this->overrideApiVersion();
   }
 
   /**
@@ -93,6 +94,15 @@ class StripeApiService {
     }
 
     return NULL;
+  }
+
+  /**
+   * Overrides API version.
+   */
+  public function overrideApiVersion() {
+    if ($this->config->get('api_version') === 'custom') {
+      Stripe::setApiVersion($this->config->get('api_version_custom'));
+    }
   }
 
   /**

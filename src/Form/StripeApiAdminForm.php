@@ -3,6 +3,7 @@
 namespace Drupal\stripe_api\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -103,6 +104,35 @@ class StripeApiAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('mode'),
     ];
 
+    $form['api_version'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Stripe API Version'),
+      '#options' => [
+        'account' => $this->t('Account default'),
+        'custom' => $this->t('Custom'),
+      ],
+      '#default_value' => $config->get('api_version') ?: 'account',
+    ];
+
+    $changeLogLink = Link::fromTextAndUrl('API changelog', Url::fromUri('https://stripe.com/docs/upgrades#api-changelog'));
+
+    $form['api_version_custom'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Custom Stripe API Version'),
+      '#default_value' => $config->get('api_version_custom'),
+      '#description' => $this->t('See @link.', ['@link' => $changeLogLink->toString()]),
+      '#size' => 11,
+      '#placeholder' => 'YYYY-MM-DD',
+      '#states' => [
+        'visible' => [
+          ':input[name="api_version"]' => ['value' => 'custom'],
+        ],
+        'required' => [
+          ':input[name="api_version"]' => ['value' => 'custom'],
+        ],
+      ],
+    ];
+
     $form['webhook_url'] = [
       '#type' => 'textfield',
       '#disabled' => TRUE,
@@ -165,6 +195,8 @@ class StripeApiAdminForm extends ConfigFormBase {
       ->set('test_public_key', $form_state->getValue('test_public_key'))
       ->set('live_secret_key', $form_state->getValue('live_secret_key'))
       ->set('live_public_key', $form_state->getValue('live_public_key'))
+      ->set('api_version', $form_state->getValue('api_version'))
+      ->set('api_version_custom', $form_state->getValue('api_version_custom'))
       ->save();
     parent::submitForm($form, $form_state);
   }
